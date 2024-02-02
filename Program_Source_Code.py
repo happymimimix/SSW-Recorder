@@ -1,7 +1,9 @@
+# Import required modules
 import io
 import os
 import threading
 import concurrent.futures
+import multiprocessing
 import time
 from tkinter import filedialog, Tk
 import keyboard
@@ -18,6 +20,7 @@ import win32ui
 import playsound
 Tk().withdraw()
 
+#Init variables
 Flipping = False
 Prev_Flipping = False
 Unloading = False
@@ -35,6 +38,7 @@ Play_Reset = 0
 Recording_Speed = 1
 Maximum_Depth = 0
 
+#Create pipes for communicating with cheat engine
 PipeSSW = win32pipe.CreateNamedPipe(
     r'\\.\pipe\SSW_Recorder_Pipe_SSW',
     win32pipe.PIPE_ACCESS_OUTBOUND,
@@ -54,6 +58,7 @@ PipeOBS = win32pipe.CreateNamedPipe(
 )
 
 def auto_start():
+#Play song after a short delay
     while not Prev_Flipping:
         time.sleep(1/128)
     time.sleep(1)
@@ -62,6 +67,7 @@ def auto_start():
     keyboard.press_and_release('s')
 
 def send_signal(signal):
+#Send signal to cheat engine through pipes
     if not UI_Debug_Mode:
         win32file.WriteFile(PipeSSW, signal.encode())
         win32file.WriteFile(PipeOBS, signal.encode())
@@ -74,6 +80,7 @@ def Format_Time(sec):
     return format(hr, '02.0f') + ':' + format(min, '02.0f') + ':' + format(sec, '05.2f')
 
 def get_pixel_color(hwnd, x, y):
+#Grab the color of a specific pixel
     hDC = win32gui.GetWindowDC(hwnd)
     try:
         color = win32gui.GetPixel(hDC, x, y)
@@ -86,6 +93,7 @@ def get_pixel_color(hwnd, x, y):
     return [r, g, b]
 
 def darkest_pixel(hwnd, x1, y1, x2, y2):
+#Find the brightness of the darkest pixel within selected range
     w = x2 - x1
     h = y2 - y1
     wDC = win32gui.GetWindowDC(hwnd)
@@ -94,18 +102,22 @@ def darkest_pixel(hwnd, x1, y1, x2, y2):
     dataBitMap = win32ui.CreateBitmap()
     dataBitMap.CreateCompatibleBitmap(dcObj, w, h)
     cDC.SelectObject(dataBitMap)
+	#Take screenshot
     cDC.BitBlt((0, 0), (w, h), dcObj, (x1, y1), win32con.SRCCOPY)
     signedIntsArray = dataBitMap.GetBitmapBits(True)
     img = frombuffer(signedIntsArray, dtype='uint8')
     img = img.astype('int32')
+	#Generate a list of colors
     img.shape = (h, w, 4)
     dcObj.DeleteDC()
     cDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, wDC)
     win32gui.DeleteObject(dataBitMap.GetHandle())
+	#Return the brightness of the darkest pixel
     return int(((img[..., 2] + img[..., 1] + img[..., 0]) / 3).min())
 
 def InRange(X, Y, x1, y1, x2, y2):
+#Check if the specified position is in the range
     return True if min(x1, x2) <= X <= max(x1, x2) and min(y1, y2) <= Y <= max(y1, y2) else False
 
 def Process_Mouse_Input(hwnd, X, Y, W, H):
@@ -217,17 +229,11 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                         keyboard.press_and_release('s')
                         keyboard.press_and_release('return')
                     if InRange(X,Y,325, H - 110, 441, H - 90):
-                        print("  |Button: Toolbox - Simple track merger", end='')
+                        print("  |Button: Toolbox - Track merger", end='')
                         draw_rectangle(hwnd, 325, H - 110, 441, H - 90, [127, 127, 247])
                         mouse.wait(mouse.LEFT, mouse.UP)
                         playsound.playsound(".\\Resources\\KDE_Click.wav")
-                        keyboard.press_and_release('alt')
-                        keyboard.press_and_release('p')
-                        keyboard.press_and_release('t')
-                        keyboard.press_and_release('alt')
-                        keyboard.press_and_release('e')
-                        keyboard.press_and_release('g')
-                        keyboard.press_and_release('t')
+                        Converter()
                     if InRange(X,Y,449, H - 110, 565, H - 90):
                         print("  |Button: Toolbox - Performance monitor", end='')
                         draw_rectangle(hwnd, 449, H - 110, 565, H - 90, [127, 127, 247])
@@ -395,11 +401,15 @@ def Main_Program(hwnd, W, H, CX, CY):
         global SH_Override1
         global Timer_Reset
         global Play_Reset
+		#Detect page flips
         Brightness = darkest_pixel(hwnd, 2, H - 3, W - 4, H - 2)
         if Brightness > 127 and not (Prev_Flipping and get_pixel_color(hwnd, (312 if Show_ControlPanel else 12), H - 30) != [255, 0, 0]):
+			#Flip detected
             Flipping = True
         else:
             Flipping = False
+		
+		#Check if pageflip is being detected for a few times in a row, prevents misrecognition. 
         if Flipping and not Prev_Flipping:
             if MisrecognitionProtect < ProtectionLevel:
                 MisrecognitionProtect += 1
@@ -415,12 +425,14 @@ def Main_Program(hwnd, W, H, CX, CY):
         if not Flipping or MisrecognitionProtect == -1:
             Prev_Flipping = Flipping
             MisrecognitionProtect = 0
+		
+		#Draw UI
         draw_rectangle(hwnd, 0, H - 5, W, H - 3, ([191, 0, 0] if Flipping else [0, 191, 191]))
         draw_rectangle(hwnd, 0, H - 2, W, H, ([191, 0, 0] if Flipping else [0, 191, 191]))
         draw_rectangle(hwnd, 0, H - 5, 2, H, ([191, 0, 0] if Flipping else [0, 191, 191]))
         draw_rectangle(hwnd, W - 2, H - 5, W, H, ([191, 0, 0] if Flipping else [0, 191, 191]))
         if Show_Watermark:
-            draw_text(hwnd, W - 20, 25, 18, [255, 0, 0], "SSW Recorder v1.1.0 | Program written by: happy_mimimix", 'R', 'T')
+            draw_text(hwnd, W - 20, 25, 18, [255, 0, 0], "SSW Recorder v1.2.1 | Program written by: happy_mimimix", 'R', 'T')
             draw_text(hwnd, W - 20, 45, 18, [255, 191, 0], "http://github.com/sudo-000/SSW-Recorder", 'R', 'T')
             draw_text(hwnd, W - 20, 65, 18, [0, 191, 0], "Plugin successfully loaded", 'R', 'T')
         if Show_ControlPanel:
@@ -436,7 +448,7 @@ def Main_Program(hwnd, W, H, CX, CY):
                 draw_rectangle(hwnd, 449, H - 135, 565, H - 115, [247, 247, 247])
                 draw_text(hwnd, 507, H - 125, 12, [15, 15, 15], "Score Type Options", 'M', 'M')
                 draw_rectangle(hwnd, 325, H - 110, 441, H - 90, [247, 247, 247])
-                draw_text(hwnd, 383, H - 100, 12, [15, 15, 15], "Simple Track Merger", 'M', 'M')
+                draw_text(hwnd, 383, H - 100, 12, [15, 15, 15], "Track Merger", 'M', 'M')
                 draw_rectangle(hwnd, 449, H - 110, 565, H - 90, [247, 247, 247])
                 draw_text(hwnd, 507, H - 100, 12, [15, 15, 15], "Performance Monitor", 'M', 'M')
                 draw_rectangle(hwnd, 325, H - 85, 441, H - 65, [247, 247, 247])
@@ -539,6 +551,7 @@ def Main_Program(hwnd, W, H, CX, CY):
                 draw_text(hwnd, W - 30, H - 40, 12, [191, 191, 0], "Unknown", 'R', 'T')
 
 def draw_rectangle(hwnd, x1, y1, x2, y2, color):
+#Draw rectangle with win32 GDI
     hdc = win32gui.GetWindowDC(hwnd)
     brush = win32gui.CreateSolidBrush(win32api.RGB(color[0], color[1], color[2]))
     win32gui.SelectObject(hdc, brush)
@@ -547,6 +560,7 @@ def draw_rectangle(hwnd, x1, y1, x2, y2, color):
     win32gui.ReleaseDC(hwnd, hdc)
 
 def draw_text(hwnd, x, y, size, color, content, alignH, alignV):
+#Draw text with win32 GDI
     hdc = win32gui.GetWindowDC(hwnd)
     win32gui.SetTextColor(hdc, win32api.RGB(color[0], color[1], color[2]))
     win32gui.SetBkMode(hdc, win32con.TRANSPARENT)
@@ -557,6 +571,7 @@ def draw_text(hwnd, x, y, size, color, content, alignH, alignV):
     win32gui.SelectObject(hdc, font)
     win32gui.SetTextColor(hdc, win32api.RGB(color[0], color[1], color[2]))
     w, h = win32gui.GetTextExtentPoint32(hdc, content)
+	#Align text
     if alignH == 'L':
         alignH2 = win32con.DT_LEFT
         x1 = x
@@ -590,6 +605,7 @@ def draw_text(hwnd, x, y, size, color, content, alignH, alignV):
     win32gui.ReleaseDC(hwnd, hdc)
 
 def to_front(hwnd):
+#Bring targeted window to front
     win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
     win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
     win32gui.SetWindowPos(hwnd, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
@@ -600,11 +616,13 @@ def to_front(hwnd):
     keyboard.release('alt')
 
 def enum_child_windows(hwnd):
+#Find all child windows
     child_windows = []
     win32gui.EnumChildWindows(hwnd, lambda hwnd, lparam: lparam.append(hwnd), child_windows)
     return child_windows
 
 def tree_search(hwnd, depth=0):
+#Search for main window
     global Maximum_Depth
     window_text = win32gui.GetWindowText(hwnd)
     window_class = win32gui.GetClassName(hwnd)
@@ -620,7 +638,7 @@ def tree_search(hwnd, depth=0):
             if Version.__contains__(' - '):
                 File = Version.split('[')[1].split(']')[0]
                 File = File.split('\\')[-1]
-                File = File.rstrip('.ss10')
+                File = File.rstrip('.' + File.split('.')[-1]).rstrip(" - For Singer Song Writer")
                 Version = Version.split(' - ')[0]
             else:
                 File = 'Null'
@@ -709,14 +727,13 @@ def tree_search(hwnd, depth=0):
                 playsound.playsound(".\\Resources\\KDE_Click.wav")
                 print("\033[95m\n\nSome optional extra tips for you to make your video even better: ")
                 print("\n1. You can change the spacing from the top margin by dragging the soprano symbol in the front of the score. ")
-                print("   By doing so, notes on all 128 keys can be seen on the musical score. ")
-                print("\n2. The track merging utility that I made, which you can access by pressing 'M' when opening this app while no songs are loaded in Singer Song Writer, will separate all the CC controllers and program change events in your midi into a separate channel. ")
-                print("   I do this because they sound horrible when all of them are being played through the same channel. ")
-                print("   If you want them back, you can use the simple track merging tool in the tool box to bring them back to channel 1. ")
+                print("By doing so, notes on all 128 keys can be seen on the musical score. ")
+                print("\n2. For better appearance, we strongly suggest you merge all channels and all tracks in your midi into one. ")
+                print("This can be done easily through a small tool I wrote in python, you can find it in the tool box. ")
                 print("\n3. It's strongly suggested for you to render a perfect audio using Keppy's Midi Converter and add it to your video by video editing. ")
-                print("   The direct sound output in Singer Song Writer is terrible, so please do not use it in your video! ")
+                print("The direct sound output in Singer Song Writer is terrible, so please do not use it in your video! ")
                 print("\n4. To print your black midi on paper, although I don't think a lot of you would do, you can do that by pressing 'Ctrl + P'. ")
-                print("   Some advanced options about printing can be configured by pressing Alt -> F -> V in sequence. ")
+                print("Some advanced options about printing can be configured by pressing Alt -> F -> V in sequence. ")
                 print("\nPress 'Z' when finished reading. ")
                 playsound.playsound(".\\Resources\\KDE_Click.wav")
                 while not keyboard.is_pressed('z'):
@@ -749,11 +766,11 @@ def tree_search(hwnd, depth=0):
             print("To begin recording, click on the following buttons in order: ")
             print("1. The 'Start Recording' button in OBS Studio")
             print("2. The 'Start Over' button in Tool box")
-            print("2. The 'Play' button in SSW Recorder control panel")
+            print("3. The 'Play' button in SSW Recorder control panel")
             print("To stop recording when finished, click on the following buttons in order: ")
             print("1. The 'Start Over' button in Tool box")
-            print("1. The 'Stop Recording' button in OBS Studio")
-            print("2. The 'Unload' button in SSW Recorder control center")
+            print("2. The 'Stop Recording' button in OBS Studio")
+            print("3. The 'Unload' button in SSW Recorder control center")
             print("\nHope you have fun making a perfect no-lag musical score video for your black midi! \n\033[32m")
             playsound.playsound(".\\Resources\\KDE_Click.wav")
             global start_time
@@ -777,17 +794,13 @@ def tree_search(hwnd, depth=0):
         tree_search(child_hwnd, depth + 1)
 
 def Converter():
-    global TrackCount
-    TrackCount = 0
     def ToReltime(messages):
         now = 0
         for msg in messages:
             delta = msg.time - now
             yield msg.copy(time=delta)
             now = msg.time
-    def ToCh1(track):
-        global TrackCount
-        ProcessedEvents = mido.MidiTrack()
+    def ToCh1(track, count):
         now = 0
         for event in track:
             now += event.time
@@ -797,42 +810,48 @@ def Converter():
                 event.channel = 1
             elif event.type == 'track_name':
                 event.name = "Made with SSW Recorder | Program written by: Happy_mimimix"
-            ProcessedEvents.append(event.copy(time=now))
-        TrackCount += 1
-        print("Processed track: " + str(TrackCount))
-        return ProcessedEvents
+            event.time=now
+        print("Processed track: " + str(count))
+        return
     print("\033[2J\033[HPlease select the midi file you want to open in the file dialog: ")
     print()
     file_path = filedialog.askopenfilename(filetypes=[('midi file', '.mid')])
     playsound.playsound(".\\Resources\\KDE_Click.wav")
+    if file_path == '': 
+        print("Operation canceled. ")
+        time.sleep(3)
+        return
+    print("Loading midi file... ")
+    mid = mido.MidiFile(file_path)
+    futures = []
+    print("Moving to channel 1... ")
+    TrackCount = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=64) as executor:
-        print("Loading midi file... ")
-        mid = mido.MidiFile(file_path)
-        futures = []
-        print("Moving to channel 1... ")
-        for track in mid.tracks:
-            future = executor.submit(ToCh1, track)
+        for TrkIndex in range(mid.tracks.__len__()):
+            TrackCount += 1
+            future = executor.submit(ToCh1, mid.tracks[TrkIndex], TrackCount)
             futures.append(future)
-        ProcessedTracks = [future.result() for future in concurrent.futures.as_completed(futures)]
-        print("Sorting events... ")
-        MergedEvents = []
-        for track in ProcessedTracks:
-            MergedEvents.extend(track)
-        MergedEvents.sort(key=lambda msg: msg.time)
-        print("Merging tracks... ")
-        mid.tracks.clear()
-        mid.tracks.append(mido.MidiTrack(ToReltime(MergedEvents)))
-        mid.tracks[0].name = "Made with SSW Recorder | Program written by: Happy_mimimix"
-        print("Exporting midi file... ")
-        mid.save(file_path.rstrip(".mid") + " - For Singer Song Writer.mid")
+        [future.result() for future in concurrent.futures.as_completed(futures)]
+    print("Sorting events... ")
+    MergedEvents = []
+    while mid.tracks:
+        MergedEvents.extend(mid.tracks.pop())
+    MergedEvents.sort(key=lambda msg: msg.time)
+    print("Merging tracks... ")
+    mid.tracks = [mido.MidiTrack(ToReltime(MergedEvents))]
+    mid.tracks[0].name = "Made with SSW Recorder | Program written by: Happy_mimimix"
+    mid.type = 0
+    print("Exporting midi file... ")
+    mid.save(file_path.rstrip(".mid") + " - For Singer Song Writer.mid")
     print()
     print("All done! New file saved to: " + file_path.rstrip(".mid") + " - For Singer Song Writer.mid")
     playsound.playsound(".\\Resources\\KDE_Error.wav")
     time.sleep(3)
+    return
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 os.system("chcp 65001")
-os.system("title SSW Recorder v1.1.0")
+os.system("title SSW Recorder v1.2.1")
 os.system("color f0")
 playsound.playsound(".\\Resources\\KDE_Beep.wav")
 print("\033[2J\033[H\033[1mPress 'Shift' to enter UI debug mode...")
@@ -857,22 +876,22 @@ if keyboard.is_pressed('shift'):
     playsound.playsound(".\\Resources\\KDE_Click.wav")
 else:
     UI_Debug_Mode = False
-print("\033[2J\033[HPress 'Ctrl' to extract source code...")
-for i in range(128):
-    keyboard.is_pressed('ctrl')
-    time.sleep(1 / 128)
-if keyboard.is_pressed('ctrl'):
-    playsound.playsound(".\\Resources\\KDE_Click.wav")
-    os.system("color 0F")
-    os.system("md \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
-    os.system("xcopy .\\Program_Source_Code.py \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-    os.system("xcopy .\\Compile_EXE.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-    os.system("xcopy .\\Environment_Setup.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-    os.system("xcopy .\\Resources \"%userprofile%\\Desktop\\SSW Recorder Source Code\\.\\Resources\" /c /e /v /r /y /k /i /g")
-    print("\n\033[92mInfo: Source code extracted to \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
-    playsound.playsound(".\\Resources\\KDE_Error.wav")
-    time.sleep(3)
-    raise SystemExit
+    print("\033[2J\033[H\033[1mPress 'Ctrl' to extract source code...")
+    for i in range(128):
+        keyboard.is_pressed('ctrl')
+        time.sleep(1 / 128)
+    if keyboard.is_pressed('ctrl'):
+        playsound.playsound(".\\Resources\\KDE_Click.wav")
+        os.system("color 0F")
+        os.system("md \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
+        os.system("xcopy .\\Program_Source_Code.py \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
+        os.system("xcopy .\\Compile_EXE.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
+        os.system("xcopy .\\Environment_Setup.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
+        os.system("xcopy .\\Resources \"%userprofile%\\Desktop\\SSW Recorder Source Code\\.\\Resources\" /c /e /v /r /y /k /i /g")
+        print("\n\033[92mInfo: Source code extracted to \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
+        playsound.playsound(".\\Resources\\KDE_Error.wav")
+        time.sleep(3)
+        raise SystemExit
 while True:
     print("\033[2J\033[H", end='')
     child_windows = enum_child_windows(win32gui.GetDesktopWindow())
