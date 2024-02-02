@@ -15,4 +15,6 @@ Please DO NOT PANIC! This is FALSE POSITIVE.
 
 DO NOT ASK ME TO FIX IT. I WON'T! 
 
-You guys should stop using the fucking stupid idiot Windows Defender NOW and switch to a more reliable antivirus software.
+You guys should stop using the fucking stupid shit Windows Defender NOW and switch to a more reliable antivirus software.
+
+I'm not going to bother with Microsoft's shit antivirus, this is wasting my time! I need to work on other things that are more important. 
