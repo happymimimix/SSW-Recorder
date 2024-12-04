@@ -323,7 +323,7 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                     keyboard.press_and_release('return')
                     keyboard.press_and_release('home')
                     global Version
-                    if int(Version[0]) > 1 and int(Version[0]) < 1:
+                    if int(Version[0]) > 1 and int(Version[0]) < 9:
                         print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
                     else:
                         keyboard.press_and_release('alt')
@@ -841,8 +841,7 @@ def tree_search(hwnd, depth=0):
             keyboard.press_and_release('n')
             keyboard.press_and_release('return')
             keyboard.press_and_release('home')
-            global Version
-            if int(Version[0]) > 1 and int(Version[0]) < 1:
+            if int(Version[0]) > 1 and int(Version[0]) < 9:
                 print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
             else:
                 keyboard.press_and_release('alt')
