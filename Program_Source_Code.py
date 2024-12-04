@@ -13,6 +13,7 @@ import win32pipe
 import win32ui
 import win32console
 from numpy import frombuffer
+from os.path import exists
 import six
 
 # Init variables
@@ -164,6 +165,7 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                 win32gui.DeleteDC(OffScreenDC)
                 print('\033[0m', end='')
                 playsound.playsound(".\\Resources\\KDE_Logout.wav")
+                os.system("del .\\Resources\\SSW10PRO.iso /f /q & del .\\Resources\\CE74.exe /f /q & del .\\Resources\\OBS30.exe")
                 raise SystemExit
         else:
             if Show_ControlPanel:
@@ -324,7 +326,7 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                     keyboard.press_and_release('home')
                     global Version
                     if int(Version[0]) > 1 and int(Version[0]) < 9:
-                        print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
+                        print("\nNote: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
                     else:
                         keyboard.press_and_release('alt')
                         keyboard.press_and_release('s')
@@ -362,7 +364,7 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                     draw_rectangle(hwnd, 325 - (0 if Show_ControlPanel else 300), H - 110, 441 - (0 if Show_ControlPanel else 300), H - 90, [127, 127, 247])
                     mouse.wait(mouse.LEFT, mouse.UP)
                     playsound.playsound(".\\Resources\\KDE_Click.wav")
-                    os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
+                    os.system("start \"\" .\\Resources\\CJCAMM.exe")
                 if InRange(X, Y, 449 - (0 if Show_ControlPanel else 300), H - 110, 565 - (0 if Show_ControlPanel else 300), H - 90):
                     print("  |Button: Toolbox - Performance monitor", end='')
                     draw_rectangle(hwnd, 449 - (0 if Show_ControlPanel else 300), H - 110, 565 - (0 if Show_ControlPanel else 300), H - 90, [127, 127, 247])
@@ -776,7 +778,10 @@ def tree_search(hwnd, depth=0):
                 while (not keyboard.is_pressed('z') and not keyboard.is_pressed('x')) or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
                 if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-                    os.system("EXPLORER .\\Resources\\CE74.exe")
+                    if not exists(".\\Resources\\CE74.exe"):
+                        print("\nExtracting resources, please wait...")
+                        os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+                    os.system("start \"\" .\\Resources\\CE74.exe")
                 while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
                 print("\033[95m\nNext, do you have OBS studio installed on your device? ")
@@ -785,7 +790,10 @@ def tree_search(hwnd, depth=0):
                 while (not keyboard.is_pressed('z') and not keyboard.is_pressed('x')) or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
                 if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-                    os.system("EXPLORER .\\Resources\\OBS30.exe")
+                    if not exists(".\\Resources\\OBS30.exe"):
+                        print("\nExtracting resources, please wait...")
+                        os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+                    os.system("start \"\" .\\Resources\\OBS30.exe")
                 while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
                 print("\033[95m\nPlease setup a new application window capture in OBS studio via Sources -> Add -> Window capture. ")
@@ -842,7 +850,7 @@ def tree_search(hwnd, depth=0):
             keyboard.press_and_release('return')
             keyboard.press_and_release('home')
             if int(Version[0]) > 1 and int(Version[0]) < 9:
-                print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
+                print("\033[93m\nNote: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. \033[32m")
             else:
                 keyboard.press_and_release('alt')
                 keyboard.press_and_release('s')
@@ -920,13 +928,12 @@ else:
         playsound.playsound(".\\Resources\\KDE_Click.wav")
         os.system("color 0F")
         os.system("md \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
-        os.system("xcopy .\\Program_Source_Code.py \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-        os.system("xcopy .\\Compile_EXE.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-        os.system("xcopy .\\Environment_Setup.cmd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /c /v /r /y /k /i /g")
-        os.system("xcopy .\\Resources \"%userprofile%\\Desktop\\SSW Recorder Source Code\\.\\Resources\" /c /e /v /r /y /k /i /g")
+        os.system("copy .\\Program_Source_Code.py \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /v /y")
+        os.system("xcopy .\\Resources \"%userprofile%\\Desktop\\SSW Recorder Source Code\\Resources\" /c /e /v /r /y /i /g")
+        os.system("cd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" && .\\Resources\\DevEnv.exe")
         print("\n\033[92mInfo: Source code extracted to \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
         playsound.playsound(".\\Resources\\KDE_Error.wav")
-        time.sleep(3)
+        time.sleep(8)
         raise SystemExit
 while True:
     print("\033[2J\033[H", end='')
@@ -944,7 +951,11 @@ while True:
             time.sleep(1 / 128)
         threading.Thread(target=playsound.playsound, args=(".\\Resources\\KDE_Click.wav",)).start()
         if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-            os.system("EXPLORER .\\Resources\\SSW10PRO.iso")
+            if not exists(".\\Resources\\SSW10PRO.iso"):
+                print("\nExtracting resources, please wait...")
+                os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+            # Why can't powershell take in relative paths?
+            os.system("PowerShell -Command \"Mount-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso';Start-Process explorer.exe ((Get-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso' | Get-Volume).DriveLetter + ':')\"")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             time.sleep(1 / 128)
     elif Maximum_Depth == 1:
@@ -982,7 +993,7 @@ while True:
                 keyboard.press_and_release('tab')
             keyboard.release('shift')
         elif keyboard.is_pressed('m') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-            os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
+            os.system("start \"\" .\\Resources\\CJCAMM.exe")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or keyboard.is_pressed('c') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             time.sleep(1 / 128)
     elif Maximum_Depth == 2:
@@ -1007,6 +1018,6 @@ while True:
             keyboard.press_and_release('e')
             keyboard.press_and_release('c')
         elif keyboard.is_pressed('m') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-            os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
+            os.system("start \"\" .\\Resources\\CJCAMM.exe")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or keyboard.is_pressed('m') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             time.sleep(1 / 128)
