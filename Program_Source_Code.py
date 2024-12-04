@@ -13,6 +13,7 @@ import win32pipe
 import win32ui
 import win32console
 from numpy import frombuffer
+import six
 
 # Init variables
 Flipping = False
@@ -321,12 +322,16 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                     keyboard.press_and_release('n')
                     keyboard.press_and_release('return')
                     keyboard.press_and_release('home')
-                    keyboard.press_and_release('alt')
-                    keyboard.press_and_release('s')
-                    keyboard.press_and_release('p')
-                    keyboard.press_and_release('s')
-                    keyboard.press_and_release('s')
-                    keyboard.press_and_release('return')
+                    global Version
+                    if int(Version[0]) > 1 and int(Version[0]) < 1:
+                        print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
+                    else:
+                        keyboard.press_and_release('alt')
+                        keyboard.press_and_release('s')
+                        keyboard.press_and_release('p')
+                        keyboard.press_and_release('s')
+                        keyboard.press_and_release('s')
+                        keyboard.press_and_release('return')
                     threading.Thread(target=auto_start, args=()).start()
                     start_time = time.time()
                 if InRange(X, Y, 325 - (0 if Show_ControlPanel else 300), H - 135, 441 - (0 if Show_ControlPanel else 300), H - 115):
@@ -357,7 +362,7 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                     draw_rectangle(hwnd, 325 - (0 if Show_ControlPanel else 300), H - 110, 441 - (0 if Show_ControlPanel else 300), H - 90, [127, 127, 247])
                     mouse.wait(mouse.LEFT, mouse.UP)
                     playsound.playsound(".\\Resources\\KDE_Click.wav")
-                    os.system(".\\Resources\\CJC_Toolbox.exe")
+                    os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
                 if InRange(X, Y, 449 - (0 if Show_ControlPanel else 300), H - 110, 565 - (0 if Show_ControlPanel else 300), H - 90):
                     print("  |Button: Toolbox - Performance monitor", end='')
                     draw_rectangle(hwnd, 449 - (0 if Show_ControlPanel else 300), H - 110, 565 - (0 if Show_ControlPanel else 300), H - 90, [127, 127, 247])
@@ -836,12 +841,16 @@ def tree_search(hwnd, depth=0):
             keyboard.press_and_release('n')
             keyboard.press_and_release('return')
             keyboard.press_and_release('home')
-            keyboard.press_and_release('alt')
-            keyboard.press_and_release('s')
-            keyboard.press_and_release('p')
-            keyboard.press_and_release('s')
-            keyboard.press_and_release('s')
-            keyboard.press_and_release('return')
+            global Version
+            if int(Version[0]) > 1 and int(Version[0]) < 1:
+                print("Note: We think your version of Singer Song Writer might not require MTC='Slave' for speed hacking. \nIf that isn't the case, click 'MTC Quick Fix' in the toolbox to fix it. ")
+            else:
+                keyboard.press_and_release('alt')
+                keyboard.press_and_release('s')
+                keyboard.press_and_release('p')
+                keyboard.press_and_release('s')
+                keyboard.press_and_release('s')
+                keyboard.press_and_release('return')
             threading.Thread(target=auto_start, args=()).start()
             threading.Thread(target=playsound.playsound, args=(".\\Resources\\KDE_Startup.wav",)).start()
             print("\033[92m\nCongratulation: \nSSW Recorder plugin has successfully loaded ! \033[95m")
@@ -849,10 +858,10 @@ def tree_search(hwnd, depth=0):
             print("The watermark can be removed by changing an option in the control panel, but it would make me happy if you could credit my program in your video. ")
             print("To begin recording, click on the following buttons in order: ")
             print("1. The 'Start Recording' button in OBS Studio")
-            print("2. The 'Start Over' button in Tool box")
+            print("2. The 'Start Over' button in the toolbox")
             print("3. The 'Play' button in SSW Recorder control panel")
             print("To stop recording when finished, click on the following buttons in order: ")
-            print("1. The 'Start Over' button in Tool box")
+            print("1. The 'Start Over' button in the toolbox")
             print("2. The 'Stop Recording' button in OBS Studio")
             print("3. The 'Unload' button in SSW Recorder control panel")
             print("\nHave fun making a perfect no-lag musical score video for your black midi! \n\033[32m")
@@ -974,7 +983,7 @@ while True:
                 keyboard.press_and_release('tab')
             keyboard.release('shift')
         elif keyboard.is_pressed('m') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-            os.system(".\\Resources\\CJC_Toolbox.exe")
+            os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or keyboard.is_pressed('c') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             time.sleep(1 / 128)
     elif Maximum_Depth == 2:
@@ -999,6 +1008,6 @@ while True:
             keyboard.press_and_release('e')
             keyboard.press_and_release('c')
         elif keyboard.is_pressed('m') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
-            os.system(".\\Resources\\CJC_Toolbox.exe")
+            os.system(".\\Resources\\CJC_Toolbox.exe CJCAMM en-us")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or keyboard.is_pressed('m') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             time.sleep(1 / 128)
