@@ -165,6 +165,9 @@ def Process_Mouse_Input(hwnd, X, Y, W, H):
                 win32gui.DeleteDC(OffScreenDC)
                 print('\033[0m', end='')
                 playsound.playsound(".\\Resources\\KDE_Logout.wav")
+                os.system("PowerShell -Command \"Dismount-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso'\"")
+                os.system("PowerShell -Command \"Dismount-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso'\"")
+                os.system("del .\\Resources\\SSW10PRO.iso /f /q & del .\\Resources\\CE74.exe /f /q & del .\\Resources\\OBS30.exe")
                 os.system("del .\\Resources\\SSW10PRO.iso /f /q & del .\\Resources\\CE74.exe /f /q & del .\\Resources\\OBS30.exe")
                 raise SystemExit
         else:
@@ -448,7 +451,7 @@ def Main_Program(hwnd, W, H, CX, CY, Clicked):
         draw_rectangle(hwnd, 0, H - 5, 2, H, ([191, 0, 0] if Flipping else [0, 191, 191]))
         draw_rectangle(hwnd, W - 2, H - 5, W, H, ([191, 0, 0] if Flipping else [0, 191, 191]))
         if Show_Watermark:
-            draw_text(hwnd, W - 20, 25, 18, [255, 0, 0], "SSW Recorder v1.2.1 | Program written by: happy_mimimix", 'R', 'T')
+            draw_text(hwnd, W - 20, 25, 18, [255, 0, 0], "SSW Recorder v1.3.0 | Program written by: happy_mimimix", 'R', 'T')
             draw_text(hwnd, W - 20, 45, 18, [255, 191, 0], "http://github.com/sudo-000/SSW-Recorder", 'R', 'T')
             draw_text(hwnd, W - 20, 65, 18, [0, 191, 0], "Plugin successfully loaded", 'R', 'T')
         if Show_ControlPanel:
@@ -722,15 +725,18 @@ def tree_search(hwnd, depth=0):
             global Version
             global File
             global MainWindowHWND
-            Version = window_text.lstrip('Singer Song Writer ')
-            if Version.__contains__(' - '):
-                File = Version.split('[')[1].split(']')[0]
-                File = File.split('\\')[-1]
-                Version = Version.split(' - ')[0]
-            else:
-                File = 'Null'
-            MainWindowHWND = hwnd
-            print("\033[34mSinger Song Writer main window handle found! ")
+            try:
+                Version = window_text.lstrip('Singer Song Writer ')
+                if Version.__contains__(' - '):
+                    File = Version.split('[')[1].split(']')[0]
+                    File = File.split('\\')[-1]
+                    Version = Version.split(' - ')[0]
+                else:
+                    File = 'Null'
+                MainWindowHWND = hwnd
+                print("\033[34mSinger Song Writer main window handle found! ")
+            except:
+                return
     elif depth == 1:
         if window_class != 'MDIClient':
             return
@@ -780,7 +786,7 @@ def tree_search(hwnd, depth=0):
                 if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     if not exists(".\\Resources\\CE74.exe"):
                         print("\nExtracting resources, please wait...")
-                        os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+                        os.system("cd /d .\\Resources\\ & rename .\\Installers.txt Installers.exe & .\\Installers.exe & rename .\\Installers.exe Installers.txt &  cd /d ..\\")
                     os.system("start \"\" .\\Resources\\CE74.exe")
                 while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
@@ -792,7 +798,7 @@ def tree_search(hwnd, depth=0):
                 if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     if not exists(".\\Resources\\OBS30.exe"):
                         print("\nExtracting resources, please wait...")
-                        os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+                        os.system("cd /d .\\Resources\\ & rename .\\Installers.txt Installers.exe & .\\Installers.exe & rename .\\Installers.exe Installers.txt &  cd /d ..\\")
                     os.system("start \"\" .\\Resources\\OBS30.exe")
                 while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
                     time.sleep(1 / 128)
@@ -930,7 +936,7 @@ else:
         os.system("md \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
         os.system("copy .\\Program_Source_Code.py \"%userprofile%\\Desktop\\SSW Recorder Source Code\" /v /y")
         os.system("xcopy .\\Resources \"%userprofile%\\Desktop\\SSW Recorder Source Code\\Resources\" /c /e /v /r /y /i /g")
-        os.system("cd \"%userprofile%\\Desktop\\SSW Recorder Source Code\" && .\\Resources\\DevEnv.exe")
+        os.system("cd /d \"%userprofile%\\Desktop\\SSW Recorder Source Code\" & rename .\\Resources\\DevEnv.txt DevEnv.exe & .\\Resources\\DevEnv.exe & rename .\\Resources\\DevEnv.exe DevEnv.txt")
         print("\n\033[92mInfo: Source code extracted to \"%userprofile%\\Desktop\\SSW Recorder Source Code\"")
         playsound.playsound(".\\Resources\\KDE_Error.wav")
         time.sleep(8)
@@ -953,7 +959,7 @@ while True:
         if keyboard.is_pressed('x') and win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
             if not exists(".\\Resources\\SSW10PRO.iso"):
                 print("\nExtracting resources, please wait...")
-                os.system("cd .\\Resources\\ && .\\Installers.exe & cd ..\\")
+                os.system("cd /d .\\Resources\\ & rename .\\Installers.txt Installers.exe & .\\Installers.exe & rename .\\Installers.exe Installers.txt &  cd /d ..\\")
             # Why can't powershell take in relative paths?
             os.system("PowerShell -Command \"Mount-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso';Start-Process explorer.exe ((Get-DiskImage -ImagePath '%CD%\\Resources\\SSW10PRO.iso' | Get-Volume).DriveLetter + ':')\"")
         while keyboard.is_pressed('z') or keyboard.is_pressed('x') or not win32gui.GetForegroundWindow() == win32console.GetConsoleWindow():
